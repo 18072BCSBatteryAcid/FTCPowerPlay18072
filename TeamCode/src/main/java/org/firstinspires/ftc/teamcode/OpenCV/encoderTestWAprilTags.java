@@ -4,7 +4,6 @@
 
 package org.firstinspires.ftc.teamcode.OpenCV;
 
-
 import static java.lang.Math.pow;
 
 import android.annotation.SuppressLint;
@@ -14,9 +13,15 @@ import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.openftc.apriltag.AprilTagDetection;
 import org.openftc.easyopencv.OpenCvCamera;
@@ -27,7 +32,7 @@ import java.util.ArrayList;
 import java.util.stream.IntStream;
 
 @Autonomous(name="April Tag Auto", group="ATAuto")
-public class aprilTagAutoBase extends LinearOpMode{
+public class encoderTestWAprilTags extends LinearOpMode{
 
     enum LiftLevel {
         GROUND(0),
@@ -52,12 +57,12 @@ public class aprilTagAutoBase extends LinearOpMode{
     //All directions are assuming the claw is the front of the robot.
     //Motor names are given assuming the camera is the front of the robot.
     enum Direction {
-        FRONT(-fBFrontLeftPowerAdjustment, -fBFrontRightPowerAdjustment,fBRearLeftPowerAdjustment, fBRearRightPowerAdjustment),
-        BACK(fBFrontLeftPowerAdjustment, fBFrontRightPowerAdjustment, -fBRearLeftPowerAdjustment, -fBRearRightPowerAdjustment),
-        LEFT(-lRFrontLeftPowerAdjustment,lRFrontRightPowerAdjustment, -lRRearLeftPowerAdjustment, lRRearRightPowerAdjustment),
-        RIGHT(lRFrontLeftPowerAdjustment, -lRFrontRightPowerAdjustment, lRRearLeftPowerAdjustment, -lRRearRightPowerAdjustment),
-        C_WISE(-turnFrontLeftPowerAdjustment, -turnFrontRightPowerAdjustment, -turnRearLeftPowerAdjustment, -turnRearRightPowerAdjustment),
-        CC_WISE(turnFrontLeftPowerAdjustment, turnFrontRightPowerAdjustment, turnRearLeftPowerAdjustment, turnRearRightPowerAdjustment);
+        FRONT(fBFrontLeftPowerAdjustment, fBFrontRightPowerAdjustment,fBRearLeftPowerAdjustment, fBRearRightPowerAdjustment),
+        BACK(-fBFrontLeftPowerAdjustment, -fBFrontRightPowerAdjustment, -fBRearLeftPowerAdjustment, -fBRearRightPowerAdjustment),
+        LEFT(lRFrontLeftPowerAdjustment, -lRFrontRightPowerAdjustment, -lRRearLeftPowerAdjustment, lRRearRightPowerAdjustment),
+        RIGHT(-lRFrontLeftPowerAdjustment, lRFrontRightPowerAdjustment, lRRearLeftPowerAdjustment, -lRRearRightPowerAdjustment),
+        C_WISE(turnFrontLeftPowerAdjustment, turnFrontRightPowerAdjustment, -turnRearLeftPowerAdjustment, -turnRearRightPowerAdjustment),
+        CC_WISE(-turnFrontLeftPowerAdjustment, -turnFrontRightPowerAdjustment, turnRearLeftPowerAdjustment, turnRearRightPowerAdjustment);
 
         private final double[] motorPowers;
         Direction(double... motorPowers) {this.motorPowers = motorPowers;}
@@ -72,6 +77,7 @@ public class aprilTagAutoBase extends LinearOpMode{
     private DcMotor bRWheel;
     private DcMotor lift;
     private Servo claw;
+    private BNO055IMU imu;
 
     long mSPTile;
     long mSPTileLR = 245;
@@ -97,6 +103,34 @@ public class aprilTagAutoBase extends LinearOpMode{
     static double lRFrontRightPowerAdjustment = 0.75;
     static double lRRearLeftPowerAdjustment = 1;
     static double lRRearRightPowerAdjustment = 0.75;
+
+    private double robotHeading = 0;
+    private double headingOffset = 0;
+    private double headingError = 0;
+
+    private double targetHeading = 0;
+    private double driveSpeed = 0;
+    private double turnSpeed = 0;
+    private double fLSpeed = 0;
+    private double fRSpeed = 0;
+    private double bLSpeed = 0;
+    private double bRSpeed = 0;
+    private int fLTarget = 0;
+    private int fRTarget = 0;
+    private int bLTarget = 0;
+    private int bRTarget = 0;
+
+    static final double COUNTS_PER_MOTOR_REV = 537.7;// eg: GoBILDA 312 RPM Yellow Jacket
+    static final double DRIVE_GEAR_REDUCTION = 1.0; // No External Gearing.
+    static final double WHEEL_DIAMETER_INCHES = 3.78; // For figuring circumference
+    static final double COUNTS_PER_INCH = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) / (WHEEL_DIAMETER_INCHES * 3.14159265358979323);
+
+    static final double DRIVE_SPEED = 0.4;
+    static final double TURN_SPEED = 0.2;
+    static final double HEADING_THRESHOLD = 1.0;
+
+    static final double P_TURN_GAIN = 0.02;
+    static final double P_DRIVE_GAIN = 0.03;
 
     int zone;
     String zoneName;
@@ -244,6 +278,158 @@ public class aprilTagAutoBase extends LinearOpMode{
         moveLift(LiftLevel.GROUND);
     }
 
+    public void driveStraight(double maxDriveSpeed, double distance, double heading) {
+
+        // Ensure that the opmode is still active
+        if (opModeIsActive()) {
+
+            // Determine new target position, and pass to motor controller
+            int moveCounts = (int)(distance * COUNTS_PER_INCH);
+            fLTarget = fLWheel.getCurrentPosition() + moveCounts;
+            fRTarget = fRWheel.getCurrentPosition() + moveCounts;
+            bLTarget = bLWheel.getCurrentPosition() + moveCounts;
+            bRTarget = bRWheel.getCurrentPosition() + moveCounts;
+
+            // Set Target FIRST, then turn on RUN_TO_POSITION
+            fLWheel.setTargetPosition(fLTarget);
+            fRWheel.setTargetPosition(fRTarget);
+            bLWheel.setTargetPosition(bLTarget);
+            bRWheel.setTargetPosition(bRTarget);
+
+            fLWheel.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            fRWheel.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            bLWheel.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            bRWheel.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+            // Set the required driving speed  (must be positive for RUN_TO_POSITION)
+            // Start driving straight, and then enter the control loop
+            maxDriveSpeed = Math.abs(maxDriveSpeed);
+            moveRobot(maxDriveSpeed, 0);
+
+            // keep looping while we are still active, and BOTH motors are running.
+            while (opModeIsActive() && (fLWheel.isBusy() && fRWheel.isBusy() && bLWheel.isBusy() && bRWheel.isBusy())) {
+
+                // Determine required steering to keep on heading
+                turnSpeed = getSteeringCorrection(heading, P_DRIVE_GAIN);
+
+                // if driving in reverse, the motor correction also needs to be reversed
+                if (distance < 0)
+                    turnSpeed *= -1.0;
+
+                // Apply the turning correction to the current driving speed.
+                moveRobot(driveSpeed, turnSpeed);
+
+                // Display drive status for the driver.
+            }
+
+            // Stop all motion & Turn off RUN_TO_POSITION
+            moveRobot(0, 0);
+            fLWheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            fRWheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            bLWheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            bRWheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        }
+    }
+
+    public void moveRobot(double drive, double turn) {
+        driveSpeed = drive;     // save this value as a class member so it can be used by telemetry.
+        turnSpeed  = turn;      // save this value as a class member so it can be used by telemetry.
+
+        fLSpeed  = drive - turn;
+        fRSpeed = drive + turn;
+        bLSpeed  = drive - turn;
+        bRSpeed = drive + turn;
+
+        // Scale speeds down if either one exceeds +/- 1.0;
+        double maxF = Math.max(Math.abs(fLSpeed), Math.abs(fRSpeed));
+        double maxB = Math.max(Math.abs(bLSpeed), Math.abs(bRSpeed));
+        double max = Math.max(Math.abs(maxF), Math.abs(maxB));
+        if (max > 1.0)
+        {
+            fLSpeed /= max;
+            fRSpeed /= max;
+            bLSpeed /= max;
+            bRSpeed /= max;
+        }
+
+        fLWheel.setPower(fLSpeed);
+        fRWheel.setPower(fRSpeed);
+        bLWheel.setPower(bLSpeed);
+        bRWheel.setPower(bRSpeed);
+    }
+
+    public double getSteeringCorrection(double desiredHeading, double proportionalGain) {
+        targetHeading = desiredHeading;  // Save for telemetry
+
+        // Get the robot heading by applying an offset to the IMU heading
+        robotHeading = getRawHeading() - headingOffset;
+
+        // Determine the heading current error
+        headingError = targetHeading - robotHeading;
+
+        // Normalize the error to be within +/- 180 degrees
+        while (headingError > 180)  headingError -= 360;
+        while (headingError <= -180) headingError += 360;
+
+        // Multiply the error by the gain to determine the required steering correction/  Limit the result to +/- 1.0
+        return Range.clip(headingError * proportionalGain, -1, 1);
+    }
+
+    public void holdHeading(double maxTurnSpeed, double heading, double holdTime) {
+
+        ElapsedTime holdTimer = new ElapsedTime();
+        holdTimer.reset();
+
+        // keep looping while we have time remaining.
+        while (opModeIsActive() && (holdTimer.time() < holdTime)) {
+            // Determine required steering to keep on heading
+            turnSpeed = getSteeringCorrection(heading, P_TURN_GAIN);
+
+            // Clip the speed to the maximum permitted value.
+            turnSpeed = Range.clip(turnSpeed, -maxTurnSpeed, maxTurnSpeed);
+
+            // Pivot in place by applying the turning correction
+            moveRobot(0, turnSpeed);
+        }
+
+        // Stop all motion;
+        moveRobot(0, 0);
+    }
+
+    public void turnToHeading(double maxTurnSpeed, double heading) {
+
+        // Run getSteeringCorrection() once to pre-calculate the current error
+        getSteeringCorrection(heading, P_DRIVE_GAIN);
+
+        // keep looping while we are still active, and not on heading.
+        while (opModeIsActive() && (Math.abs(headingError) > HEADING_THRESHOLD)) {
+
+            // Determine required steering to keep on heading
+            turnSpeed = getSteeringCorrection(heading, P_TURN_GAIN);
+
+            // Clip the speed to the maximum permitted value.
+            turnSpeed = Range.clip(turnSpeed, -maxTurnSpeed, maxTurnSpeed);
+
+            // Pivot in place by applying the turning correction
+            moveRobot(0, turnSpeed);
+
+        }
+
+        // Stop all motion;
+        moveRobot(0, 0);
+    }
+
+    public double getRawHeading() {
+        Orientation angles   = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+        return angles.firstAngle;
+    }
+
+    public void resetHeading() {
+        // Save a new heading offset equal to the current raw heading.
+        headingOffset = getRawHeading();
+        robotHeading = 0;
+    }
+
     @Override
     public void runOpMode(){
 
@@ -254,11 +440,25 @@ public class aprilTagAutoBase extends LinearOpMode{
         lift = hardwareMap.get(DcMotor.class,"Lift");
         claw = hardwareMap.get(Servo.class,"Claw");
 
+        fLWheel.setDirection(DcMotor.Direction.REVERSE);
+        fRWheel.setDirection(DcMotor.Direction.REVERSE);
+        bLWheel.setDirection(DcMotor.Direction.FORWARD);
+        bRWheel.setDirection(DcMotor.Direction.FORWARD);
+
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
         parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
-        parameters.calibrationDataFile = "BNO055IMUCalibration.json";
-        BNO055IMU emu = hardwareMap.get(BNO055IMU.class, "imu");
-        emu.initialize(parameters);
+        imu = hardwareMap.get(BNO055IMU.class, "imu");
+        imu.initialize(parameters);
+
+        fLWheel.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        fRWheel.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        bLWheel.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        bRWheel.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+        fLWheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        fRWheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        bLWheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        bRWheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
         camera = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "Webcam 1"), cameraMonitorViewId);
@@ -310,6 +510,12 @@ public class aprilTagAutoBase extends LinearOpMode{
             sleep(20);
         }
 
+        fLWheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        fRWheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        bLWheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        bRWheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        resetHeading();
+
         /*
          * The START command just came in: now work off the latest snapshot acquired
          * during the init loop.
@@ -345,18 +551,25 @@ public class aprilTagAutoBase extends LinearOpMode{
 
             switch (zone){
                 case LEFT_ZONE:
-                    moveTiles(Direction.BACK, 1);
+                    turnToHeading(TURN_SPEED, 90.0);
+                    holdHeading(TURN_SPEED, 0.0, 0.5);
+                    driveStraight(DRIVE_SPEED, 24, 0.0);
+                    holdHeading(TURN_SPEED, 0.0, 0.5);
+                    turnToHeading(TURN_SPEED, -90.0);
                     break;
                 case RIGHT_ZONE:
-                    moveTiles(Direction.FRONT, 1);
+                    turnToHeading(TURN_SPEED, 90.0);
+                    holdHeading(TURN_SPEED, 0.0, 0.5);
+                    driveStraight(DRIVE_SPEED, -24, 0.0);
+                    holdHeading(TURN_SPEED, 0.0, 0.5);
+                    turnToHeading(TURN_SPEED, -90.0);
                     break;
             }
 
-            sleep(500);
-            moveTiles(Direction.LEFT, 2.25);
-            sleep(1000);
-            rotate(95, Direction.CC_WISE);
-
+            driveStraight(DRIVE_SPEED, 24, 0.0);
+            holdHeading(TURN_SPEED, 0.0, 0.5);
+            turnToHeading(TURN_SPEED, 90.0);
+            holdHeading(TURN_SPEED, 0.0, 0.5);
         }
 
     }
