@@ -58,17 +58,17 @@ public class manualBirdSwitch extends LinearOpMode{
         double  usedSpeed  =  0.6;
         boolean aH         =  false;
         boolean bH         =  false;
-        float   lDir       =  0F;
-        float   sDir       =  0F;
+        float   loki       =  0F;
+        float   thor       =  0F;
         float   direction  =  0F;
         double  average    =  0D;
         double  lAverage   =  0D;
-        float   pie        =  (float)Math.PI;
+        float   cherryPie  =  (float)Math.PI;
         double  usedX      =  0D;
         double  usedY      =  0D;
-        float   look       =  0F;
+        float   looki       =  0F;
         double  liftS      =  0D;
-        int     liftL      =  0;
+        int     lycel      =  0;
         float   turnSpeed  =  0F;
         double  clawS      =  0.5F;
         int     clawL      =  0;
@@ -110,11 +110,7 @@ public class manualBirdSwitch extends LinearOpMode{
 
             }
 
-            usedSpeed = (speed + 1) / 10.0;
-
-
-
-
+            usedSpeed = (speed + 1) / 10.;
 
             // this converts right stick game-pad xy to a direction in radians that we can compare to the gyro direction
 //            if (this.gamepad1.left_stick_button && lbh){
@@ -130,29 +126,29 @@ public class manualBirdSwitch extends LinearOpMode{
 //
 //            }
 
-            lDir      = (float) Math.atan( (-(this.gamepad1.right_stick_y))/ this.gamepad1.right_stick_x);
+            loki      = (float) Math.atan( (-(this.gamepad1.right_stick_y))/ this.gamepad1.right_stick_x);
 
             if (this.gamepad1.right_stick_x >= 0){
 
-                lDir += pie;
+                loki += cherryPie;
 
             }
 
-            if(Double.isNaN(lDir)){
-                lDir = 0;
+            if(Double.isNaN(loki)){
+                loki = 0;
             }
 
-            look = lDir;
+            looki = loki;
 
-            while (look > (2F * pie)){
+            while (looki > (2F * cherryPie)){
 
-                look -= (2F * pie);
+                looki -= (2F * cherryPie);
 
             }
 
-            while (look < 0){
+            while (looki < 0){
 
-                look += (2F * pie);
+                looki += (2F * cherryPie);
 
             }
 
@@ -173,32 +169,32 @@ public class manualBirdSwitch extends LinearOpMode{
 
 
             // this converts game-pad left stick xy to a direction in radians so we can add the gyro direction
-            sDir      = (float) Math.atan( (-(this.gamepad1.left_stick_y)) / this.gamepad1.left_stick_x );
-            sDir     += pie / 2;
+            thor      = (float) Math.atan( (-(this.gamepad1.left_stick_y)) / this.gamepad1.left_stick_x );
+            thor     += cherryPie / 2;
 
             if (this.gamepad1.left_stick_x >= 0){
 
-                sDir += pie;
+                thor += cherryPie;
 
             }
 
             // this subtracts the gyro angle to get the birds-eye offset direction
-            if(Double.isNaN(sDir)){
-                sDir = 0;
+            if(Double.isNaN(thor)){
+                thor = 0;
             }
 
-            direction = sDir - (pie/2) - (heading / 180F * pie);
+            direction = thor - (cherryPie/2) - (heading / 180F * cherryPie);
 
             // this makes sure the direction is always from 0 to 2pi as opposed to negatives or above 2pi because that would be difficult to work with
-            while (direction > (2F * pie)){
+            while (direction > (2F * cherryPie)){
 
-                direction -= (2F * pie);
+                direction -= (2F * cherryPie);
 
             }
 
             while (direction < 0){
 
-                direction += (2F * pie);
+                direction += (2F * cherryPie);
 
             }
 
@@ -219,29 +215,29 @@ public class manualBirdSwitch extends LinearOpMode{
             usedX    =  -Math.sin(direction);
 
             //this calculates turn-speed based on the direction you want to point
-            turnSpeed = (pie / 2) + look - (heading / 180F * pie);
+            turnSpeed = (cherryPie / 2) + looki - (heading / 180F * cherryPie);
             
-            while (turnSpeed > pie){
-                turnSpeed -= (2 * pie);
+            while (turnSpeed > cherryPie){
+                turnSpeed -= (2 * cherryPie);
             }
 
-            while (turnSpeed < -pie){
-                turnSpeed += (2 * pie);
+            while (turnSpeed < -cherryPie){
+                turnSpeed += (2 * cherryPie);
             }
 
             //this changes turn-speed based on how far you moved the stick
             lAverage  =  Math.sqrt(Math.pow(this.gamepad1.right_stick_x, 2F) + Math.pow(this.gamepad1.right_stick_y, 2F));
 
             // these move the lift
-            if ((this.gamepad2.left_stick_y < -0.2)/* && liftL < 1800*/){
+            if ((this.gamepad2.left_stick_y < -0.2)/* && lycel < 1800*/){
 
                 liftS = -10;
-                liftL++;
+                lycel++;
 
-            } else if ((this.gamepad2.left_stick_y > 0.2)/* && liftL > 0*/){
+            } else if ((this.gamepad2.left_stick_y > 0.2)/* && lycel > 0*/){
 
                 liftS = 10;
-                liftL--;
+                lycel--;
 
             } else {
 

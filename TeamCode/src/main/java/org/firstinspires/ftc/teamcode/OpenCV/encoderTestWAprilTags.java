@@ -547,6 +547,8 @@ public class encoderTestWAprilTags extends LinearOpMode{
 
         if(opModeIsActive()){
 
+            driveStraight(DRIVE_SPEED, 4, 0.0);
+
             //park in the correct zone by moving one tile to the left or right
 
             switch (zone){
