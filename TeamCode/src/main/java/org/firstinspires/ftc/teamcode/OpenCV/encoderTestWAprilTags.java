@@ -2,33 +2,31 @@
 //  - Try to get auto cones
 //  - Figure out constant values
 
-package org.     firstinspires. ftc.           teamcode.             OpenCV;
+package org.firstinspires.ftc.teamcode.OpenCV;
 
-import  static   java.          lang.          Math.                 pow;
+import  android.annotation.SuppressLint;
+import  android.os.Build;
 
-import  android. annotation.    SuppressLint;
-import  android. os.            Build;
+import  com.qualcomm.hardware.bosch.BNO055IMU;
+import  com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import  com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import  com.qualcomm.robotcore.hardware.DcMotor;
+import  com.qualcomm.robotcore.hardware.Servo;
+import  com.qualcomm.robotcore.util.ElapsedTime;
+import  com.qualcomm.robotcore.util.Range;
 
-import  com.     qualcomm.      hardware.      bosch.                BNO055IMU;
-import  com.     qualcomm.      robotcore.     eventloop.            opmode.       Autonomous;
-import  com.     qualcomm.      robotcore.     eventloop.            opmode.       LinearOpMode;
-import  com.     qualcomm.      robotcore.     hardware.             DcMotor;
-import  com.     qualcomm.      robotcore.     hardware.             Servo;
-import  com.     qualcomm.      robotcore.     util.                 ElapsedTime;
-import  com.     qualcomm.      robotcore.     util.                 Range;
+import  org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import  org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import  org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
+import  org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
+import  org.firstinspires.ftc.robotcore.external.navigation.Orientation;
+import  org.openftc.apriltag.AprilTagDetection;
+import  org.openftc.easyopencv.OpenCvCamera;
+import  org.openftc.easyopencv.OpenCvCameraFactory;
+import  org.openftc.easyopencv.OpenCvCameraRotation;
 
-import  org.     firstinspires. ftc.           robotcore.            external.     hardware.   camera.        WebcamName;
-import  org.     firstinspires. ftc.           robotcore.            external.     navigation. AngleUnit;
-import  org.     firstinspires. ftc.           robotcore.            external.     navigation. AxesOrder;
-import  org.     firstinspires. ftc.           robotcore.            external.     navigation. AxesReference;
-import  org.     firstinspires. ftc.           robotcore.            external.     navigation. Orientation;
-import  org.     openftc.       apriltag.      AprilTagDetection;
-import  org.     openftc.       easyopencv.    OpenCvCamera;
-import  org.     openftc.       easyopencv.    OpenCvCameraFactory;
-import  org.     openftc.       easyopencv.    OpenCvCameraRotation;
-
-import  java.    util.          ArrayList;
-import  java.    util.          stream.        IntStream;
+import  java.util.ArrayList;
+import  java.util.stream.IntStream;
 
 @Autonomous(name="encoderTestWAprilTags", group="ATAuto")
 public class encoderTestWAprilTags extends LinearOpMode{
@@ -38,46 +36,46 @@ public class encoderTestWAprilTags extends LinearOpMode{
     static double rLPowerAdjustment = 1;
     static double rRPowerAdjustment = 1;
 
-    private DcMotor     fLWheel;
-    private DcMotor     fRWheel;
-    private DcMotor     bLWheel;
-    private DcMotor     bRWheel;
-    private DcMotor     lift;
-    private Servo       claw;
-    private BNO055IMU   imu;
+    private DcMotor fLWheel;
+    private DcMotor fRWheel;
+    private DcMotor bLWheel;
+    private DcMotor bRWheel;
+    private DcMotor lift;
+    private Servo claw;
+    private BNO055IMU imu;
 
-    private double  robotHeading  = 0;
-    private double  headingOffset = -90;
-    private double  headingError  = 0;
+    private double robotHeading = 0;
+    private double headingOffset = -90;
+    private double headingError = 0;
 
-    private double  targetHeading = 0;
-    private double  driveSpeed    = 0;
-    private double  turnSpeed     = 0;
-    private double  fLSpeed       = 0;
-    private double  fRSpeed       = 0;
-    private double  bLSpeed       = 0;
-    private double  bRSpeed       = 0;
-    private int     fLTarget      = 0;
-    private int     fRTarget      = 0;
-    private int     bLTarget      = 0;
-    private int     bRTarget      = 0;
+    private double targetHeading = 0;
+    private double driveSpeed = 0;
+    private double turnSpeed = 0;
+    private double fLSpeed = 0;
+    private double fRSpeed = 0;
+    private double bLSpeed = 0;
+    private double bRSpeed = 0;
+    private int fLTarget = 0;
+    private int fRTarget = 0;
+    private int bLTarget = 0;
+    private int bRTarget = 0;
 
-    static  final   double COUNTS_PER_MOTOR_REV  = 537.7;// eg: GoBILDA 312 RPM Yellow Jacket
-    static  final   double DRIVE_GEAR_REDUCTION  = 1.0; // No External Gearing.
-    static  final   double WHEEL_DIAMETER_INCHES = 3.78; // For figuring circumference
-    static  final   double COUNTS_PER_INCH       = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) / (WHEEL_DIAMETER_INCHES * 3.14159265358979323);
+    static final double COUNTS_PER_MOTOR_REV = 537.7;// eg: GoBILDA 312 RPM Yellow Jacket
+    static final double DRIVE_GEAR_REDUCTION = 1.0; // No External Gearing.
+    static final double WHEEL_DIAMETER_INCHES = 3.78; // For figuring circumference
+    static final double COUNTS_PER_INCH = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) / (WHEEL_DIAMETER_INCHES * 3.14159265358979323);
 
-    static  final   double DRIVE_SPEED       = 0.4;
-    static  final   double TURN_SPEED        = 0.2;
-    static  final   double HEADING_THRESHOLD = 1.0;
+    static final double DRIVE_SPEED = 0.4;
+    static final double TURN_SPEED = 0.2;
+    static final double HEADING_THRESHOLD = 1.0;
 
-    static  final   double P_TURN_GAIN       = 0.02;
-    static  final   double P_DRIVE_GAIN      = 0.03;
+    static final double P_TURN_GAIN = 0.02;
+    static final double P_DRIVE_GAIN = 0.03;
 
-    int    zone;
+    int zone;
     String zoneName;
 
-    final   double FEET_PER_METER = 3.28084;
+    final double FEET_PER_METER = 3.28084;
 
     // Lens intrinsics
     // UNITS ARE PIXELS
@@ -89,14 +87,14 @@ public class encoderTestWAprilTags extends LinearOpMode{
     double cy = 221.506;
 
     // UNITS ARE METERS
-    double tagSize        = 0.05;
+    double tagSize = 0.05;
 
-    final int LEFT_ZONE   = 4;
+    final int LEFT_ZONE = 4;
     final int MIDDLE_ZONE = 8;
-    final int RIGHT_ZONE  = 12;
+    final int RIGHT_ZONE = 12;
 
-    AprilTagDetection         tagOfInterest = null;
-    OpenCvCamera              camera;
+    AprilTagDetection tagOfInterest = null;
+    OpenCvCamera camera;
     AprilTagDetectionPipeline aprilTagDetectionPipeline;
 
     public void driveStraight(double maxDriveSpeed, double distance, double heading) {
@@ -153,21 +151,20 @@ public class encoderTestWAprilTags extends LinearOpMode{
     }
 
     public void moveRobot(double drive, double turn) {
-        driveSpeed    = drive;     // save this value as a class member so it can be used by telemetry.
-        turnSpeed     = turn;      // save this value as a class member so it can be used by telemetry.
+        driveSpeed = drive;     // save this value as a class member so it can be used by telemetry.
+        turnSpeed = turn;      // save this value as a class member so it can be used by telemetry.
 
-        fLSpeed       = drive + (turn * fLPowerAdjustment);
-        fRSpeed       = drive + (turn * fRPowerAdjustment);
-        bLSpeed       = drive - (turn * rLPowerAdjustment);
-        bRSpeed       = drive - (turn * rRPowerAdjustment);
+        fLSpeed = drive + (turn * fLPowerAdjustment);
+        fRSpeed = drive + (turn * fRPowerAdjustment);
+        bLSpeed = drive - (turn * rLPowerAdjustment);
+        bRSpeed = drive - (turn * rRPowerAdjustment);
 
         // Scale speeds down if either one exceeds +/- 1.0;
         //                        This code has a six pack of abs.
-        double maxF  = Math.max( Math.abs( fLSpeed ), Math.abs( fRSpeed ));
-        double maxB  = Math.max( Math.abs( bLSpeed ), Math.abs( bRSpeed ));
-        double max   = Math.max( Math.abs( maxF    ), Math.abs( maxB    ));
-        if (max > 1.0)
-        {
+        double maxF = Math.max(Math.abs(fLSpeed), Math.abs(fRSpeed));
+        double maxB = Math.max(Math.abs(bLSpeed), Math.abs(bRSpeed));
+        double max = Math.max(Math.abs(maxF), Math.abs(maxB));
+        if (max > 1.0) {
             fLSpeed /= max;
             fRSpeed /= max;
             bLSpeed /= max;
@@ -188,10 +185,10 @@ public class encoderTestWAprilTags extends LinearOpMode{
         robotHeading = getRawHeading() - headingOffset;
 
         // Determine the heading current error
-        headingError = targetHeading   - robotHeading;
+        headingError = targetHeading - robotHeading;
 
         // Normalize the error to be within +/- 180 degrees
-        while (headingError >   180) headingError -= 360;
+        while (headingError > 180) headingError -= 360;
         while (headingError <= -180) headingError += 360;
 
         // Multiply the error by the gain to determine the required steering correction/  Limit the result to +/- 1.0
@@ -248,14 +245,14 @@ public class encoderTestWAprilTags extends LinearOpMode{
 
 
     public double getRawHeading() {
-        Orientation angles   = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+        Orientation angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
         return angles.firstAngle;
     }
 
     public void resetHeading() {
         // Save a new heading offset equal to the current raw heading.
-        headingOffset  = getRawHeading();
-        robotHeading   = 0;
+        headingOffset = getRawHeading();
+        robotHeading = 0;
     }
 
     @Override
@@ -375,8 +372,6 @@ public class encoderTestWAprilTags extends LinearOpMode{
 
         if(opModeIsActive()){
 
-            //ELEPHANT
-
             claw.setPosition(0.45F);
 
             sleep(500);
@@ -389,25 +384,25 @@ public class encoderTestWAprilTags extends LinearOpMode{
             /*
             switch (zone){
                 case LEFT_ZONE:
-                    turnToHeading(TURN_SPEED,  90.0);sleep(2000);
-                    holdHeading(TURN_SPEED,  0.0, 0.5);sleep(2000);
-                    driveStraight(DRIVE_SPEED, 24,   0.0);sleep(2000);
-                    holdHeading(TURN_SPEED,  0.0, 0.5);sleep(2000);
-                    turnToHeading(TURN_SPEED,  0.0);sleep(2000);
+                    turnToHeading(TURN_SPEED, 90.0);
+                    holdHeading(TURN_SPEED, 0.0, 0.5);
+                    driveStraight(DRIVE_SPEED, 24, 0.0);
+                    holdHeading(TURN_SPEED, 0.0, 0.5);
+                    turnToHeading(TURN_SPEED, 0.0);
                     break;
                 case RIGHT_ZONE:
-                    turnToHeading( TURN_SPEED,   90.0);sleep(2000);
-                    holdHeading( TURN_SPEED,   0.0, 0.5);sleep(2000);
-                    driveStraight( DRIVE_SPEED, -24,   0.0);sleep(2000);
-                    holdHeading( TURN_SPEED,   0.0, 0.5);sleep(2000);
-                    turnToHeading( TURN_SPEED,   0.0);sleep(2000);
+                    turnToHeading( TURN_SPEED, 90.0);
+                    holdHeading( TURN_SPEED, 0.0, 0.5);
+                    driveStraight( DRIVE_SPEED, -24, 0.0);
+                    holdHeading( TURN_SPEED, 0.0, 0.5);
+                    turnToHeading( TURN_SPEED, 0.0);
                     break;
             }*/
 /*
-            driveStraight(DRIVE_SPEED, 24,   0.0); sleep(2000);
-              holdHeading(TURN_SPEED,  0.0, 0.5); sleep(2000);
-            turnToHeading(TURN_SPEED,  90.0             ); sleep(2000);
-              holdHeading(TURN_SPEED,  0.0, 0.5); sleep(2000);*/
+            driveStraight(DRIVE_SPEED, 24, 0.0);
+             holdHeading(TURN_SPEED, 0.0, 0.5);
+            turnToHeading(TURN_SPEED, 90.0);
+            holdHeading(TURN_SPEED, 0.0, 0.5);*/
         }
 
 
