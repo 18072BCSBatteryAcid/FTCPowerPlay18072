@@ -1,15 +1,15 @@
-package org.firstinspires.ftc.teamcode.TeleOp;
+package org. firstinspires. ftc.       teamcode.  TeleOp;
 
-import com.qualcomm.hardware.bosch.BNO055IMU;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.Servo;
+import  com. qualcomm.      hardware.  bosch.     BNO055IMU;
+import  com. qualcomm.      robotcore. eventloop. opmode.    LinearOpMode;
+import  com. qualcomm.      robotcore. eventloop. opmode.    TeleOp;
+import  com. qualcomm.      robotcore. hardware.  DcMotor;
+import  com. qualcomm.      robotcore. hardware.  Servo;
 
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
-import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
+import  org. firstinspires. ftc.       robotcore. external.   navigation.   AngleUnit;
+import  org. firstinspires. ftc.       robotcore. external.   navigation.   AxesOrder;
+import  org. firstinspires. ftc.       robotcore. external.   navigation.   AxesReference;
+import  org. firstinspires. ftc.       robotcore. external.   navigation.   Orientation;
 
 
 @TeleOp
@@ -36,7 +36,11 @@ public class manualBirdSwitch extends LinearOpMode{
         BLwheel           = hardwareMap.get(DcMotor.class, "LRear"  );
         BRwheel           = hardwareMap.get(DcMotor.class, "RRear"  );
         lift              = hardwareMap.get(DcMotor.class, "Lift"   );
-        claw              = hardwareMap.get(Servo.class,   "Claw"   );
+        claw              = hardwareMap.get(  Servo.class, "Claw"   );
+
+        claw.setPosition(0.45F);
+
+        sleep(500);
 
         //digitalTouch      = hardwareMap.get(DigitalChannel.class, "digitalTouch");
         //sensorColorRange  = hardwareMap.get(DistanceSensor.class, "sensorColorRange");
@@ -70,8 +74,8 @@ public class manualBirdSwitch extends LinearOpMode{
         double  liftS      =  0D;
         int     lycel      =  0;
         float   turnSpeed  =  0F;
-        double  clawS      =  0.5F;
-        int     clawL      =  0;
+        double  clawS      =  0.25F;
+        int     cole      =  0;
         float   threshold  =  (float)Math.sqrt(2) / 2;
         boolean lbh        =  true;
         float   heading;
@@ -226,38 +230,33 @@ public class manualBirdSwitch extends LinearOpMode{
             }
 
             //this changes turn-speed based on how far you moved the stick
-            lAverage  =  Math.sqrt(Math.pow(this.gamepad1.right_stick_x, 2F) + Math.pow(this.gamepad1.right_stick_y, 2F));
+            lAverage   =  Math.sqrt( Math.pow( this.gamepad1.right_stick_x, 2F ) + Math.pow( this.gamepad1.right_stick_y, 2F ) );
 
             // these move the lift
-            if ((this.gamepad2.left_stick_y < -0.2)/* && lycel < 1800*/){
+            if ( ( ( this.gamepad2.left_stick_y < -0.2 ) /* && lycel < 1800*/ ) || ( ( this.gamepad2.left_stick_y > 0.2 ) /* && lycel > 0*/ ) ) {
 
-                liftS = -10;
-                lycel++;
-
-            } else if ((this.gamepad2.left_stick_y > 0.2)/* && lycel > 0*/){
-
-                liftS = 10;
-                lycel--;
+                liftS  = 10 * this.gamepad2.left_stick_y;
+                lycel +=      this.gamepad2.left_stick_y / Math.abs( this.gamepad2.left_stick_y );
 
             } else {
 
-                liftS = 0;
+                liftS  = 0;
 
             }
 
-            if (this.gamepad2.left_trigger > 0.1/* && clawL > 0*/){
+            if (this.gamepad2.left_trigger > 0.1 && clawS > 0.45F){
 
-                clawS = claw.getPosition()-0.005F;
-                clawL--;
+                clawS  = claw.getPosition()-(0.005F * this.gamepad2.left_trigger);
+                cole--;
 
-            } else if (this.gamepad2.right_trigger > 0.1 /*&& clawL < 1800*/){
-                
-                clawS = claw.getPosition()+0.005F;
-                clawL++;
+            } else if (this.gamepad2.right_trigger > 0.1 && clawS < 0.8F ){
+
+                clawS  = claw.getPosition()+(0.005F * this.gamepad2.right_trigger);
+                cole++;
 
             }else {
                 
-                clawS = claw.getPosition();
+                clawS  = claw.getPosition();
                 
             }
 
@@ -272,27 +271,27 @@ public class manualBirdSwitch extends LinearOpMode{
 
 
             // these set all the motor values
-            fl  = (((-usedX  +  usedY) * average) + (turnSpeed * lAverage)) * usedSpeed;
+            fl  = ((( -usedX  +  usedY ) * average ) + ( turnSpeed * lAverage )) * usedSpeed;
             //* usedSpeed * average  +  this.gamepad1.left_trigger  +  -this.gamepad1.right_trigger;
-            fr  = ((( usedX  +  usedY) * average) - (turnSpeed * lAverage)) * usedSpeed;
+            fr  = (((  usedX  +  usedY ) * average ) - ( turnSpeed * lAverage )) * usedSpeed;
             //* usedSpeed * average  +  this.gamepad1.left_trigger  +  -this.gamepad1.right_trigger;
-            br  = (((-usedX  +  usedY) * average) - (turnSpeed * lAverage)) * usedSpeed;
+            br  = ((( -usedX  +  usedY ) * average ) - ( turnSpeed * lAverage )) * usedSpeed;
             //* usedSpeed * average  +  this.gamepad1.left_trigger  +  -this.gamepad1.right_trigger;
-            bl  = ((( usedX  +  usedY) * average) + (turnSpeed * lAverage)) * usedSpeed;
+            bl  = (((  usedX  +  usedY ) * average ) + ( turnSpeed * lAverage )) * usedSpeed;
             //* usedSpeed * average  +  this.gamepad1.left_trigger  +  -this.gamepad1.right_trigger;
 
             // this moves the motors
-            FLwheel.setPower(  fl   );
-            FRwheel.setPower( -fr   );
-            BLwheel.setPower(  bl   );
-            BRwheel.setPower( -br   );
-            lift.setPower(  liftS   );
-            claw.setPosition(clawS  );
+            FLwheel.setPower(       fl   );
+            FRwheel.setPower(      -fr   );
+            BLwheel.setPower(       bl   );
+            BRwheel.setPower(      -br   );
+            lift.   setPower(    liftS   );
+            claw.   setPosition( clawS   );
 
             // this displays things to the screen
             telemetry.addData(  "Status"        , "Running"    );
             telemetry.addData(  "Speed"         , speed              );
-            telemetry.addData(  "Heading"       , heading            );
+            telemetry.addData(  "Heading"       , claw.getPosition()            );
             telemetry.update();
 
         }

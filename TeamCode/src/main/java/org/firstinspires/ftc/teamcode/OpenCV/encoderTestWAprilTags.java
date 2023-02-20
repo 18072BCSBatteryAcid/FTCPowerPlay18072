@@ -2,140 +2,82 @@
 //  - Try to get auto cones
 //  - Figure out constant values
 
-package org.firstinspires.ftc.teamcode.OpenCV;
+package org.     firstinspires. ftc.           teamcode.             OpenCV;
 
-import static java.lang.Math.pow;
+import  static   java.          lang.          Math.                 pow;
 
-import android.annotation.SuppressLint;
-import android.os.Build;
+import  android. annotation.    SuppressLint;
+import  android. os.            Build;
 
-import com.qualcomm.hardware.bosch.BNO055IMU;
-import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.Servo;
-import com.qualcomm.robotcore.util.ElapsedTime;
-import com.qualcomm.robotcore.util.Range;
+import  com.     qualcomm.      hardware.      bosch.                BNO055IMU;
+import  com.     qualcomm.      robotcore.     eventloop.            opmode.       Autonomous;
+import  com.     qualcomm.      robotcore.     eventloop.            opmode.       LinearOpMode;
+import  com.     qualcomm.      robotcore.     hardware.             DcMotor;
+import  com.     qualcomm.      robotcore.     hardware.             Servo;
+import  com.     qualcomm.      robotcore.     util.                 ElapsedTime;
+import  com.     qualcomm.      robotcore.     util.                 Range;
 
-import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
-import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
-import org.openftc.apriltag.AprilTagDetection;
-import org.openftc.easyopencv.OpenCvCamera;
-import org.openftc.easyopencv.OpenCvCameraFactory;
-import org.openftc.easyopencv.OpenCvCameraRotation;
+import  org.     firstinspires. ftc.           robotcore.            external.     hardware.   camera.        WebcamName;
+import  org.     firstinspires. ftc.           robotcore.            external.     navigation. AngleUnit;
+import  org.     firstinspires. ftc.           robotcore.            external.     navigation. AxesOrder;
+import  org.     firstinspires. ftc.           robotcore.            external.     navigation. AxesReference;
+import  org.     firstinspires. ftc.           robotcore.            external.     navigation. Orientation;
+import  org.     openftc.       apriltag.      AprilTagDetection;
+import  org.     openftc.       easyopencv.    OpenCvCamera;
+import  org.     openftc.       easyopencv.    OpenCvCameraFactory;
+import  org.     openftc.       easyopencv.    OpenCvCameraRotation;
 
-import java.util.ArrayList;
-import java.util.stream.IntStream;
+import  java.    util.          ArrayList;
+import  java.    util.          stream.        IntStream;
 
-@Autonomous(name="April Tag Auto", group="ATAuto")
+@Autonomous(name="encoderTestWAprilTags", group="ATAuto")
 public class encoderTestWAprilTags extends LinearOpMode{
 
-    enum LiftLevel {
-        GROUND(0),
-        ONE(0),
-        TWO(50),
-        THREE(100),
-        FOUR(150),
-        FIVE(200),
-        GROUND_J(50),
-        LOW_J(1500),
-        MEDIUM_J(3000),
-        HIGH_J(4600),
-        CLEAR(1500 - sleepToLow);
+    static double fLPowerAdjustment = 1;
+    static double fRPowerAdjustment = 1;
+    static double rLPowerAdjustment = 1;
+    static double rRPowerAdjustment = 1;
 
-        private final long sleepTime;
+    private DcMotor     fLWheel;
+    private DcMotor     fRWheel;
+    private DcMotor     bLWheel;
+    private DcMotor     bRWheel;
+    private DcMotor     lift;
+    private Servo       claw;
+    private BNO055IMU   imu;
 
-        LiftLevel(long sleepTime) {this.sleepTime = sleepTime;}
+    private double  robotHeading  = 0;
+    private double  headingOffset = -90;
+    private double  headingError  = 0;
 
-        public long getSleepTime() {return sleepTime;}
-    }
+    private double  targetHeading = 0;
+    private double  driveSpeed    = 0;
+    private double  turnSpeed     = 0;
+    private double  fLSpeed       = 0;
+    private double  fRSpeed       = 0;
+    private double  bLSpeed       = 0;
+    private double  bRSpeed       = 0;
+    private int     fLTarget      = 0;
+    private int     fRTarget      = 0;
+    private int     bLTarget      = 0;
+    private int     bRTarget      = 0;
 
-    //All directions are assuming the claw is the front of the robot.
-    //Motor names are given assuming the camera is the front of the robot.
-    enum Direction {
-        FRONT(fBFrontLeftPowerAdjustment, fBFrontRightPowerAdjustment,fBRearLeftPowerAdjustment, fBRearRightPowerAdjustment),
-        BACK(-fBFrontLeftPowerAdjustment, -fBFrontRightPowerAdjustment, -fBRearLeftPowerAdjustment, -fBRearRightPowerAdjustment),
-        LEFT(lRFrontLeftPowerAdjustment, -lRFrontRightPowerAdjustment, -lRRearLeftPowerAdjustment, lRRearRightPowerAdjustment),
-        RIGHT(-lRFrontLeftPowerAdjustment, lRFrontRightPowerAdjustment, lRRearLeftPowerAdjustment, -lRRearRightPowerAdjustment),
-        C_WISE(turnFrontLeftPowerAdjustment, turnFrontRightPowerAdjustment, -turnRearLeftPowerAdjustment, -turnRearRightPowerAdjustment),
-        CC_WISE(-turnFrontLeftPowerAdjustment, -turnFrontRightPowerAdjustment, turnRearLeftPowerAdjustment, turnRearRightPowerAdjustment);
+    static  final   double COUNTS_PER_MOTOR_REV  = 537.7;// eg: GoBILDA 312 RPM Yellow Jacket
+    static  final   double DRIVE_GEAR_REDUCTION  = 1.0; // No External Gearing.
+    static  final   double WHEEL_DIAMETER_INCHES = 3.78; // For figuring circumference
+    static  final   double COUNTS_PER_INCH       = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) / (WHEEL_DIAMETER_INCHES * 3.14159265358979323);
 
-        private final double[] motorPowers;
-        Direction(double... motorPowers) {this.motorPowers = motorPowers;}
+    static  final   double DRIVE_SPEED       = 0.4;
+    static  final   double TURN_SPEED        = 0.2;
+    static  final   double HEADING_THRESHOLD = 1.0;
 
-        public double[] getMotorPowers() {return motorPowers;}
-    }
+    static  final   double P_TURN_GAIN       = 0.02;
+    static  final   double P_DRIVE_GAIN      = 0.03;
 
-    private Orientation angles;
-    private DcMotor fLWheel;
-    private DcMotor fRWheel;
-    private DcMotor bLWheel;
-    private DcMotor bRWheel;
-    private DcMotor lift;
-    private Servo claw;
-    private BNO055IMU imu;
-
-    long mSPTile;
-    long mSPTileLR = 245;
-    long mSPTileFB = 557;
-    double mSPDeg = (440/90);
-    long smallMove = 150;
-    double tileScale = 0.95;
-
-    long liftSleepTime;
-    boolean groundReset = false;
-    LiftLevel currentLevel = LiftLevel.GROUND;
-    static long sleepToLow;
-
-    static double turnFrontLeftPowerAdjustment = 1;
-    static double turnFrontRightPowerAdjustment = 1;
-    static double turnRearLeftPowerAdjustment = 1;
-    static double turnRearRightPowerAdjustment = 0.925;
-    static double fBFrontLeftPowerAdjustment = 1;
-    static double fBFrontRightPowerAdjustment = 1;
-    static double fBRearLeftPowerAdjustment = 1;
-    static double fBRearRightPowerAdjustment = 0.925;
-    static double lRFrontLeftPowerAdjustment = 1;
-    static double lRFrontRightPowerAdjustment = 0.75;
-    static double lRRearLeftPowerAdjustment = 1;
-    static double lRRearRightPowerAdjustment = 0.75;
-
-    private double robotHeading = 0;
-    private double headingOffset = 0;
-    private double headingError = 0;
-
-    private double targetHeading = 0;
-    private double driveSpeed = 0;
-    private double turnSpeed = 0;
-    private double fLSpeed = 0;
-    private double fRSpeed = 0;
-    private double bLSpeed = 0;
-    private double bRSpeed = 0;
-    private int fLTarget = 0;
-    private int fRTarget = 0;
-    private int bLTarget = 0;
-    private int bRTarget = 0;
-
-    static final double COUNTS_PER_MOTOR_REV = 537.7;// eg: GoBILDA 312 RPM Yellow Jacket
-    static final double DRIVE_GEAR_REDUCTION = 1.0; // No External Gearing.
-    static final double WHEEL_DIAMETER_INCHES = 3.78; // For figuring circumference
-    static final double COUNTS_PER_INCH = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) / (WHEEL_DIAMETER_INCHES * 3.14159265358979323);
-
-    static final double DRIVE_SPEED = 0.4;
-    static final double TURN_SPEED = 0.2;
-    static final double HEADING_THRESHOLD = 1.0;
-
-    static final double P_TURN_GAIN = 0.02;
-    static final double P_DRIVE_GAIN = 0.03;
-
-    int zone;
+    int    zone;
     String zoneName;
 
-    final double FEET_PER_METER = 3.28084;
+    final   double FEET_PER_METER = 3.28084;
 
     // Lens intrinsics
     // UNITS ARE PIXELS
@@ -147,140 +89,19 @@ public class encoderTestWAprilTags extends LinearOpMode{
     double cy = 221.506;
 
     // UNITS ARE METERS
-    double tagSize = 0.05;
+    double tagSize        = 0.05;
 
-    final int LEFT_ZONE = 4;
+    final int LEFT_ZONE   = 4;
     final int MIDDLE_ZONE = 8;
-    final int RIGHT_ZONE = 12;
+    final int RIGHT_ZONE  = 12;
 
-    AprilTagDetection tagOfInterest = null;
-    OpenCvCamera camera;
+    AprilTagDetection         tagOfInterest = null;
+    OpenCvCamera              camera;
     AprilTagDetectionPipeline aprilTagDetectionPipeline;
-
-    private double[] getMotorPowersForDirection(Direction direction) {
-        return direction.getMotorPowers();
-    }
-
-    private void applyPowerToMotors(double[] motorPowers) {
-        DcMotor[] motors = {fLWheel, fRWheel, bLWheel, bRWheel};
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            IntStream.range(0,motors.length).forEach(i->motors[i].setPower(motorPowers[i]));
-        }
-    }
-
-    private void momentumCancel(double[] motorPowers) {
-        double[] stopPowers = new double[motorPowers.length];
-        for(int i = 0; i < motorPowers.length; i++){
-            stopPowers[i] = -motorPowers[i];
-        }
-        applyPowerToMotors(stopPowers);
-        sleep(40);
-        stopMotors();
-    }
-
-    private void stopMotors() {
-        DcMotor[] motors = {fLWheel, fRWheel, bLWheel, bRWheel};
-        for (DcMotor motor : motors) {
-            motor.setPower(0);
-        }
-    }
-
-    //Takes a parameter value from the Direction enum
-    //Moves any amount of tiles, partial tiles should work
-    private void moveTiles(Direction direction, double tiles) {
-        switch(direction){
-            case BACK:
-            case FRONT:
-                mSPTile = mSPTileFB;
-                break;
-            case LEFT:
-            case RIGHT:
-                mSPTile = mSPTileLR;
-                break;
-        }
-        double[] motorPowers = getMotorPowersForDirection(direction);
-        applyPowerToMotors(motorPowers);
-        sleep((long)(tiles * mSPTile * pow(tileScale, tiles - 1)));
-        momentumCancel(motorPowers);
-    }
-
-    //Takes a parameter value from the Direction enum
-    //C_WISE and CC_WISE should work for slight adjustments
-    //Moves the robot a small amount, only used for cones or navigating around the junctions
-    private void slightMove(Direction direction){
-        double[] motorPowers = getMotorPowersForDirection(direction);
-        applyPowerToMotors(motorPowers);
-        sleep(smallMove);
-        stopMotors();
-    }
-
-    //Rotates the specified number of degrees
-    private void rotate(double degrees, Direction direction){
-        double[] motorPowers = getMotorPowersForDirection(direction);
-        applyPowerToMotors(motorPowers);
-        sleep((long)(degrees * mSPDeg));
-        momentumCancel(motorPowers);
-    }
-
-    //Takes a parameter from the LiftLevel enum to determine the travel distance of the lift
-    /* KEY - edit if new values are added
-    GROUND - lower the lift all the way
-    ONE - single cone
-    TWO - two stack
-    THREE - three stack
-    FOUR - four stack
-    FIVE - five stack
-    GROUND_J - ground junction
-    LOW_J - low junction
-    MEDIUM_J - medium junction
-    HIGH_J - high junction
-    CLEAR - clear cone stack/ low junction height
-    */
-    private void moveLift(LiftLevel targetLevel) {
-        if (currentLevel == LiftLevel.GROUND || targetLevel == LiftLevel.CLEAR || targetLevel == LiftLevel.GROUND) {
-            double power;
-            switch (targetLevel) {
-                case GROUND:
-                    power = 1;
-                    targetLevel = currentLevel;
-                    groundReset = true;
-                    liftSleepTime = (long)(targetLevel.sleepTime * 0.9);
-                    break;
-                default:
-                    power = -1;
-                    liftSleepTime = targetLevel.sleepTime;
-                    groundReset = false;
-                    break;
-            }
-            lift.setPower(power);
-            sleep(liftSleepTime);
-            lift.setPower(0);
-            currentLevel = targetLevel;
-            if(groundReset){
-                currentLevel = LiftLevel.GROUND;
-            }
-        }
-    }
-
-    //Starting from a position centered on the targeted pole, the robot will drop a cone on the pole designated by the poleHeight parameter
-    //KEY - see line 185
-    private void scorePole(LiftLevel poleHeight){
-        claw.setPosition(1);
-        moveLift(poleHeight);
-        sleep(100);
-        slightMove(Direction.FRONT);
-        sleep(100);
-        claw.setPosition(0);
-        sleep(500);
-        slightMove(Direction.BACK);
-        claw.setPosition(1);
-        sleep(250);
-        moveLift(LiftLevel.GROUND);
-    }
 
     public void driveStraight(double maxDriveSpeed, double distance, double heading) {
 
-        // Ensure that the opmode is still active
+        // Ensure that the OpMode is still active
         if (opModeIsActive()) {
 
             // Determine new target position, and pass to motor controller
@@ -332,18 +153,19 @@ public class encoderTestWAprilTags extends LinearOpMode{
     }
 
     public void moveRobot(double drive, double turn) {
-        driveSpeed = drive;     // save this value as a class member so it can be used by telemetry.
-        turnSpeed  = turn;      // save this value as a class member so it can be used by telemetry.
+        driveSpeed    = drive;     // save this value as a class member so it can be used by telemetry.
+        turnSpeed     = turn;      // save this value as a class member so it can be used by telemetry.
 
-        fLSpeed  = drive - turn;
-        fRSpeed = drive + turn;
-        bLSpeed  = drive - turn;
-        bRSpeed = drive + turn;
+        fLSpeed       = drive + (turn * fLPowerAdjustment);
+        fRSpeed       = drive + (turn * fRPowerAdjustment);
+        bLSpeed       = drive - (turn * rLPowerAdjustment);
+        bRSpeed       = drive - (turn * rRPowerAdjustment);
 
         // Scale speeds down if either one exceeds +/- 1.0;
-        double maxF = Math.max(Math.abs(fLSpeed), Math.abs(fRSpeed));
-        double maxB = Math.max(Math.abs(bLSpeed), Math.abs(bRSpeed));
-        double max = Math.max(Math.abs(maxF), Math.abs(maxB));
+        //                        This code has a six pack of abs.
+        double maxF  = Math.max( Math.abs( fLSpeed ), Math.abs( fRSpeed ));
+        double maxB  = Math.max( Math.abs( bLSpeed ), Math.abs( bRSpeed ));
+        double max   = Math.max( Math.abs( maxF    ), Math.abs( maxB    ));
         if (max > 1.0)
         {
             fLSpeed /= max;
@@ -359,20 +181,22 @@ public class encoderTestWAprilTags extends LinearOpMode{
     }
 
     public double getSteeringCorrection(double desiredHeading, double proportionalGain) {
+
         targetHeading = desiredHeading;  // Save for telemetry
 
         // Get the robot heading by applying an offset to the IMU heading
         robotHeading = getRawHeading() - headingOffset;
 
         // Determine the heading current error
-        headingError = targetHeading - robotHeading;
+        headingError = targetHeading   - robotHeading;
 
         // Normalize the error to be within +/- 180 degrees
-        while (headingError > 180)  headingError -= 360;
+        while (headingError >   180) headingError -= 360;
         while (headingError <= -180) headingError += 360;
 
         // Multiply the error by the gain to determine the required steering correction/  Limit the result to +/- 1.0
         return Range.clip(headingError * proportionalGain, -1, 1);
+
     }
 
     public void holdHeading(double maxTurnSpeed, double heading, double holdTime) {
@@ -395,6 +219,8 @@ public class encoderTestWAprilTags extends LinearOpMode{
         // Stop all motion;
         moveRobot(0, 0);
     }
+
+
 
     public void turnToHeading(double maxTurnSpeed, double heading) {
 
@@ -419,6 +245,8 @@ public class encoderTestWAprilTags extends LinearOpMode{
         moveRobot(0, 0);
     }
 
+
+
     public double getRawHeading() {
         Orientation angles   = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
         return angles.firstAngle;
@@ -426,29 +254,29 @@ public class encoderTestWAprilTags extends LinearOpMode{
 
     public void resetHeading() {
         // Save a new heading offset equal to the current raw heading.
-        headingOffset = getRawHeading();
-        robotHeading = 0;
+        headingOffset  = getRawHeading();
+        robotHeading   = 0;
     }
 
     @Override
     public void runOpMode(){
 
-        fLWheel = hardwareMap.get(DcMotor.class,"LFront");
-        fRWheel = hardwareMap.get(DcMotor.class,"RFront");
-        bLWheel = hardwareMap.get(DcMotor.class,"LRear");
-        bRWheel = hardwareMap.get(DcMotor.class,"RRear");
-        lift = hardwareMap.get(DcMotor.class,"Lift");
-        claw = hardwareMap.get(Servo.class,"Claw");
+        fLWheel = hardwareMap.get( DcMotor.class,"LFront" );
+        fRWheel = hardwareMap.get( DcMotor.class,"RFront" );
+        bLWheel = hardwareMap.get( DcMotor.class,"LRear"  );
+        bRWheel = hardwareMap.get( DcMotor.class,"RRear"  );
+        lift    = hardwareMap.get( DcMotor.class,"Lift"   );
+        claw    = hardwareMap.get(   Servo.class,"Claw"   );
 
-        fLWheel.setDirection(DcMotor.Direction.REVERSE);
-        fRWheel.setDirection(DcMotor.Direction.REVERSE);
-        bLWheel.setDirection(DcMotor.Direction.FORWARD);
-        bRWheel.setDirection(DcMotor.Direction.FORWARD);
+        fLWheel.setDirection(      DcMotor.Direction.REVERSE        );
+        fRWheel.setDirection(      DcMotor.Direction.REVERSE        );
+        bLWheel.setDirection(      DcMotor.Direction.FORWARD        );
+        bRWheel.setDirection(      DcMotor.Direction.FORWARD        );
 
-        BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
-        parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
-        imu = hardwareMap.get(BNO055IMU.class, "imu");
-        imu.initialize(parameters);
+        BNO055IMU.  Parameters   parameters = new        BNO055IMU.Parameters(  );
+        parameters. angleUnit =  BNO055IMU.   AngleUnit. DEGREES;
+        imu =       hardwareMap. get(         BNO055IMU. class, "imu" );
+        imu.        initialize(  parameters   );
 
         fLWheel.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         fRWheel.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -490,7 +318,7 @@ public class encoderTestWAprilTags extends LinearOpMode{
             for (AprilTagDetection tag : currentDetections) {
                 if (tag.id == LEFT_ZONE || tag.id == MIDDLE_ZONE || tag.id == RIGHT_ZONE) {
                     tagOfInterest = tag;
-                    tagFound = true;
+                    tagFound      = true;
                     break;
                 }
             }
@@ -547,44 +375,52 @@ public class encoderTestWAprilTags extends LinearOpMode{
 
         if(opModeIsActive()){
 
-            driveStraight(DRIVE_SPEED, 4, 0.0);
+            //ELEPHANT
+
+            claw.setPosition(0.45F);
+
+            sleep(500);
+
+            turnToHeading(TURN_SPEED, 90);
+
+            sleep(2000);
 
             //park in the correct zone by moving one tile to the left or right
-
+            /*
             switch (zone){
                 case LEFT_ZONE:
-                    turnToHeading(TURN_SPEED, 90.0);
-                    holdHeading(TURN_SPEED, 0.0, 0.5);
-                    driveStraight(DRIVE_SPEED, 24, 0.0);
-                    holdHeading(TURN_SPEED, 0.0, 0.5);
-                    turnToHeading(TURN_SPEED, -90.0);
+                    turnToHeading(TURN_SPEED,  90.0);sleep(2000);
+                    holdHeading(TURN_SPEED,  0.0, 0.5);sleep(2000);
+                    driveStraight(DRIVE_SPEED, 24,   0.0);sleep(2000);
+                    holdHeading(TURN_SPEED,  0.0, 0.5);sleep(2000);
+                    turnToHeading(TURN_SPEED,  0.0);sleep(2000);
                     break;
                 case RIGHT_ZONE:
-                    turnToHeading(TURN_SPEED, 90.0);
-                    holdHeading(TURN_SPEED, 0.0, 0.5);
-                    driveStraight(DRIVE_SPEED, -24, 0.0);
-                    holdHeading(TURN_SPEED, 0.0, 0.5);
-                    turnToHeading(TURN_SPEED, -90.0);
+                    turnToHeading( TURN_SPEED,   90.0);sleep(2000);
+                    holdHeading( TURN_SPEED,   0.0, 0.5);sleep(2000);
+                    driveStraight( DRIVE_SPEED, -24,   0.0);sleep(2000);
+                    holdHeading( TURN_SPEED,   0.0, 0.5);sleep(2000);
+                    turnToHeading( TURN_SPEED,   0.0);sleep(2000);
                     break;
-            }
-
-            driveStraight(DRIVE_SPEED, 24, 0.0);
-            holdHeading(TURN_SPEED, 0.0, 0.5);
-            turnToHeading(TURN_SPEED, 90.0);
-            holdHeading(TURN_SPEED, 0.0, 0.5);
+            }*/
+/*
+            driveStraight(DRIVE_SPEED, 24,   0.0); sleep(2000);
+              holdHeading(TURN_SPEED,  0.0, 0.5); sleep(2000);
+            turnToHeading(TURN_SPEED,  90.0             ); sleep(2000);
+              holdHeading(TURN_SPEED,  0.0, 0.5); sleep(2000);*/
         }
+
 
     }
 
     @SuppressLint("DefaultLocale")
-    void tagToTelemetry(AprilTagDetection detection)
-    {
-        telemetry.addLine(String.format("\nDetected tag ID=%d", detection.id));
-        telemetry.addLine(String.format("Translation X: %.2f feet", detection.pose.x*FEET_PER_METER));
-        telemetry.addLine(String.format("Translation Y: %.2f feet", detection.pose.y*FEET_PER_METER));
-        telemetry.addLine(String.format("Translation Z: %.2f feet", detection.pose.z*FEET_PER_METER));
-        telemetry.addLine(String.format("Rotation Yaw: %.2f degrees", Math.toDegrees(detection.pose.yaw)));
-        telemetry.addLine(String.format("Rotation Pitch: %.2f degrees", Math.toDegrees(detection.pose.pitch)));
-        telemetry.addLine(String.format("Rotation Roll: %.2f degrees", Math.toDegrees(detection.pose.roll)));
+    void tagToTelemetry(AprilTagDetection detection) {
+        telemetry.addLine( String.format( "\nDetected tag ID=%d",         detection. id                               ));
+        telemetry.addLine( String.format( "Translation X: %.2f feet",     detection. pose.x*FEET_PER_METER            ));
+        telemetry.addLine( String.format( "Translation Y: %.2f feet",     detection. pose.y*FEET_PER_METER            ));
+        telemetry.addLine( String.format( "Translation Z: %.2f feet",     detection. pose.z*FEET_PER_METER            ));
+        telemetry.addLine( String.format( "Rotation Yaw: %.2f degrees",   Math.      toDegrees( detection.pose.yaw   )));
+        telemetry.addLine( String.format( "Rotation Pitch: %.2f degrees", Math.      toDegrees( detection.pose.pitch )));
+        telemetry.addLine( String.format( "Rotation Roll: %.2f degrees",  Math.      toDegrees( detection.pose.roll  )));
     }
 }

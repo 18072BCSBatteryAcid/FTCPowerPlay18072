@@ -231,15 +231,15 @@ public class aprilTagAutoBase extends LinearOpMode{
     //Starting from a position centered on the targeted pole, the robot will drop a cone on the pole designated by the poleHeight parameter
     //KEY - see line 185
     private void scorePole(LiftLevel poleHeight){
-        claw.setPosition(1);
+        claw.setPosition(0.73F);
         moveLift(poleHeight);
         sleep(100);
         slightMove(Direction.FRONT);
         sleep(100);
-        claw.setPosition(0);
+        claw.setPosition(0.45F);
         sleep(500);
         slightMove(Direction.BACK);
-        claw.setPosition(1);
+        claw.setPosition(0.73F);
         sleep(250);
         moveLift(LiftLevel.GROUND);
     }
@@ -253,6 +253,10 @@ public class aprilTagAutoBase extends LinearOpMode{
         bRWheel = hardwareMap.get(DcMotor.class,"RRear");
         lift = hardwareMap.get(DcMotor.class,"Lift");
         claw = hardwareMap.get(Servo.class,"Claw");
+
+        claw.setPosition(0.45F);
+
+        sleep(500);
 
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
         parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
@@ -355,7 +359,7 @@ public class aprilTagAutoBase extends LinearOpMode{
             sleep(500);
             moveTiles(Direction.LEFT, 2.25);
             sleep(1000);
-            rotate(95, Direction.CC_WISE);
+            rotate(105, Direction.CC_WISE);
 
         }
 

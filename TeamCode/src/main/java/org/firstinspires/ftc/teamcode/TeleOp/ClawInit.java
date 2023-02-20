@@ -19,11 +19,13 @@ import   com.    qualcomm.         robotcore.  util.                  ElapsedTim
 import   com.    qualcomm.         robotcore.  util.                  Range;
 import   com.    qualcomm.         robotcore.  util.                  RobotLog;
 import   com.    qualcomm.         robotcore.  util.                  ThreadPool;
+
 import   java.   lang.             Math;
 import   java.   util.             concurrent. CancellationException;
 import   java.   util.             concurrent. ExecutorService;
 import   java.   util.             concurrent. TimeUnit;
 import   java.   util.             Stack;
+
 import   org.    checkerframework. checker.    units.                 qual.               radians;
 import   org.    firstinspires.    ftc.        robotcore.             external.           navigation.     AngleUnit;
 import   org.    firstinspires.    ftc.        robotcore.             external.           navigation.     AxesOrder;
@@ -31,11 +33,11 @@ import   org.    firstinspires.    ftc.        robotcore.             external. 
 import   org.    firstinspires.    ftc.        robotcore.             external.           navigation.     Orientation;
 import   org.    firstinspires.    ftc.        robotcore.             internal.           opmode.         TelemetryInternal;
 
-@TeleOp
-public class ClawInit extends LinearOpMode {
+@TeleOp(name="ClawInnitBruv", group="Bri'ish OpModes")
+public   class    ClawInit         extends     LinearOpMode {
 
     private Servo claw;
-    
+
     @Override
     public void runOpMode() {
 
@@ -45,9 +47,11 @@ public class ClawInit extends LinearOpMode {
         telemetry.update();
 
         // Wait for the game to start (driver presses PLAY)
-        waitForStart();
+        // waitForStart();
 
-        claw.setPosition(0.5);
+        claw.setPosition(0.45F);
+
+        sleep(2000);
         
     }
 
