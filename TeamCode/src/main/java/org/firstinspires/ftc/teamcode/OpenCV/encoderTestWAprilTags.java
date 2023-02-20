@@ -1,7 +1,3 @@
-//TODO
-//  - Try to get auto cones
-//  - Figure out constant values
-
 package org.firstinspires.ftc.teamcode.OpenCV;
 
 import  android.annotation.SuppressLint;
@@ -28,8 +24,8 @@ import  org.openftc.easyopencv.OpenCvCameraRotation;
 import  java.util.ArrayList;
 import  java.util.stream.IntStream;
 
-@Autonomous(name="encoderTestWAprilTags", group="ATAuto")
-public class encoderTestWAprilTags extends LinearOpMode{
+@Autonomous(name="Just work this time", group="ATAuto")
+public class encoderTestWAprilTags extends LinearOpMode {
 
     static double fLPowerAdjustment = 1;
     static double fRPowerAdjustment = 1;
@@ -256,24 +252,24 @@ public class encoderTestWAprilTags extends LinearOpMode{
     }
 
     @Override
-    public void runOpMode(){
+    public void runOpMode() {
 
-        fLWheel = hardwareMap.get( DcMotor.class,"LFront" );
-        fRWheel = hardwareMap.get( DcMotor.class,"RFront" );
-        bLWheel = hardwareMap.get( DcMotor.class,"LRear"  );
-        bRWheel = hardwareMap.get( DcMotor.class,"RRear"  );
-        lift    = hardwareMap.get( DcMotor.class,"Lift"   );
-        claw    = hardwareMap.get(   Servo.class,"Claw"   );
+        fLWheel = hardwareMap.get(DcMotor.class,"LFront");
+        fRWheel = hardwareMap.get(DcMotor.class,"RFront");
+        bLWheel = hardwareMap.get(DcMotor.class,"LRear");
+        bRWheel = hardwareMap.get(DcMotor.class,"RRear");
+        lift    = hardwareMap.get(DcMotor.class,"Lift");
+        claw    = hardwareMap.get(Servo.class,"Claw");
 
-        fLWheel.setDirection(      DcMotor.Direction.REVERSE        );
-        fRWheel.setDirection(      DcMotor.Direction.REVERSE        );
-        bLWheel.setDirection(      DcMotor.Direction.FORWARD        );
-        bRWheel.setDirection(      DcMotor.Direction.FORWARD        );
+        fLWheel.setDirection(DcMotor.Direction.REVERSE);
+        fRWheel.setDirection(DcMotor.Direction.REVERSE);
+        bLWheel.setDirection(DcMotor.Direction.FORWARD);
+        bRWheel.setDirection(DcMotor.Direction.FORWARD);
 
-        BNO055IMU.  Parameters   parameters = new        BNO055IMU.Parameters(  );
-        parameters. angleUnit =  BNO055IMU.   AngleUnit. DEGREES;
-        imu =       hardwareMap. get(         BNO055IMU. class, "imu" );
-        imu.        initialize(  parameters   );
+        BNO055IMU.Parameters parameters = new BNO055IMU.Parameters(  );
+        parameters.angleUnit = BNO055IMU. AngleUnit. DEGREES;
+        imu = hardwareMap. get(BNO055IMU.class, "imu");
+        imu.initialize(parameters);
 
         fLWheel.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         fRWheel.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -290,14 +286,14 @@ public class encoderTestWAprilTags extends LinearOpMode{
         aprilTagDetectionPipeline = new AprilTagDetectionPipeline(tagSize, fx, fy, cx, cy);
 
         camera.setPipeline(aprilTagDetectionPipeline);
-        camera.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener(){
+        camera.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener() {
             @Override
-            public void onOpened(){
+            public void onOpened() {
                 camera.startStreaming(800,448, OpenCvCameraRotation.UPRIGHT);
             }
 
             @Override
-            public void onError(int errorCode){
+            public void onError(int errorCode) {
 
             }
         });
@@ -347,30 +343,30 @@ public class encoderTestWAprilTags extends LinearOpMode{
          */
 
         //Update the telemetry and the stored zone
-        if(tagOfInterest != null){
+        if(tagOfInterest != null) {
             telemetry.addLine("Tag snapshot:\n");
             tagToTelemetry(tagOfInterest);
             telemetry.update();
             zone = tagOfInterest.id;
 
-            if(zone == LEFT_ZONE){
+            if(zone == LEFT_ZONE) {
                 zoneName = "Left";
-            }else if(zone == MIDDLE_ZONE){
+            }else if(zone == MIDDLE_ZONE) {
                 zoneName = "Middle";
-            }else if(zone == RIGHT_ZONE){
+            }else if(zone == RIGHT_ZONE) {
                 zoneName = "Right";
             }
 
             telemetry.addData(">Zone: ", zoneName);
 
-        }else{
+        }else {
             telemetry.addLine("No tag snapshot available, it was never sighted during the init loop :(");
             telemetry.update();
             //Sets the middle zone as the default if no tag is detected
             zone = MIDDLE_ZONE;
         }
 
-        if(opModeIsActive()){
+        if(opModeIsActive()) {
 
             claw.setPosition(0.45F);
 
@@ -410,12 +406,12 @@ public class encoderTestWAprilTags extends LinearOpMode{
 
     @SuppressLint("DefaultLocale")
     void tagToTelemetry(AprilTagDetection detection) {
-        telemetry.addLine( String.format( "\nDetected tag ID=%d",         detection. id                               ));
-        telemetry.addLine( String.format( "Translation X: %.2f feet",     detection. pose.x*FEET_PER_METER            ));
-        telemetry.addLine( String.format( "Translation Y: %.2f feet",     detection. pose.y*FEET_PER_METER            ));
-        telemetry.addLine( String.format( "Translation Z: %.2f feet",     detection. pose.z*FEET_PER_METER            ));
-        telemetry.addLine( String.format( "Rotation Yaw: %.2f degrees",   Math.      toDegrees( detection.pose.yaw   )));
-        telemetry.addLine( String.format( "Rotation Pitch: %.2f degrees", Math.      toDegrees( detection.pose.pitch )));
-        telemetry.addLine( String.format( "Rotation Roll: %.2f degrees",  Math.      toDegrees( detection.pose.roll  )));
+        telemetry.addLine( String.format("\nDetected tag ID=%d", detection. id));
+        telemetry.addLine( String.format("Translation X: %.2f feet", detection. pose.x*FEET_PER_METER));
+        telemetry.addLine( String.format("Translation Y: %.2f feet", detection. pose.y*FEET_PER_METER));
+        telemetry.addLine( String.format("Translation Z: %.2f feet", detection. pose.z*FEET_PER_METER));
+        telemetry.addLine( String.format("Rotation Yaw: %.2f degrees", Math.toDegrees( detection.pose.yaw)));
+        telemetry.addLine( String.format("Rotation Pitch: %.2f degrees", Math.toDegrees( detection.pose.pitch)));
+        telemetry.addLine( String.format("Rotation Roll: %.2f degrees", Math.toDegrees( detection.pose.roll)));
     }
 }
