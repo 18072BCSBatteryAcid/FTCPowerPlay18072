@@ -1,44 +1,49 @@
-package org. firstinspires. ftc.       teamcode.  TeleOp;
+package org. firstinspires.   ftc.              teamcode.  TeleOp;
 
-import  com. qualcomm.      hardware.  bosch.     BNO055IMU;
-import  com. qualcomm.      robotcore. eventloop. opmode.    LinearOpMode;
-import  com. qualcomm.      robotcore. eventloop. opmode.    TeleOp;
-import  com. qualcomm.      robotcore. hardware.  DcMotor;
-import  com. qualcomm.      robotcore. hardware.  Servo;
+import  com. qualcomm.        hardware.         bosch.     BNO055IMU;
+import  com. qualcomm.        robotcore.        eventloop. opmode.       LinearOpMode;
+import  com. qualcomm.        robotcore.        eventloop. opmode.       TeleOp;
+import  com. qualcomm.        robotcore.        hardware.  DcMotor;
+import  com. qualcomm.        robotcore.        hardware.  Servo;
 
-import  org. firstinspires. ftc.       robotcore. external.   navigation.   AngleUnit;
-import  org. firstinspires. ftc.       robotcore. external.   navigation.   AxesOrder;
-import  org. firstinspires. ftc.       robotcore. external.   navigation.   AxesReference;
-import  org. firstinspires. ftc.       robotcore. external.   navigation.   Orientation;
+import  org. firstinspires.   ftc.              robotcore. external.     navigation.   AngleUnit;
+import  org. firstinspires.   ftc.              robotcore. external.     navigation.   AxesOrder;
+import  org. firstinspires.   ftc.              robotcore. external.     navigation.   AxesReference;
+import  org. firstinspires.   ftc.              robotcore. external.     navigation.   Orientation;
 
 
 @TeleOp
-public class manualBirdSwitch extends LinearOpMode{
+public       class            manualBirdSwitch  extends    LinearOpMode{
 
-    private  BNO055IMU       emu;
-    private  Orientation     angles;
-    private  DcMotor         FLwheel;
-    private  DcMotor         FRwheel;
-    private  DcMotor         BLwheel;
-    private  DcMotor         BRwheel;
-    private  DcMotor         lift;
-    private  Servo           claw;
-    //private  DigitalChannel  digitalTouch;
-    //private  DistanceSensor  sensorColorRange;
-    //private  Servo           servoTest;
+
+
+    private  BNO055IMU        emu;
+    private  DcMotor          FLwheel;
+    private  DcMotor          FRwheel;
+    private  DcMotor          BLwheel;
+    private  DcMotor          BRwheel;
+    private  DcMotor          lift;
+    private  Orientation      angles;
+    private  Servo            claw;
+  //private  DigitalChannel   digitalTouch;
+  //private  DistanceSensor   sensorColorRange;
+  //private  Servo            servoTest;
 
     @Override
     public void runOpMode() {
 
         // this is where you initialize the motor variables and point them to the correct hardware
-        FLwheel           = hardwareMap.get(DcMotor.class, "LFront" );
-        FRwheel           = hardwareMap.get(DcMotor.class, "RFront" );
-        BLwheel           = hardwareMap.get(DcMotor.class, "LRear"  );
-        BRwheel           = hardwareMap.get(DcMotor.class, "RRear"  );
-        lift              = hardwareMap.get(DcMotor.class, "Lift"   );
-        claw              = hardwareMap.get(  Servo.class, "Claw"   );
+        FLwheel           =   hardwareMap.get(DcMotor.class, "LFront" );
+        FRwheel           =   hardwareMap.get(DcMotor.class, "RFront" );
+        BLwheel           =   hardwareMap.get(DcMotor.class, "LRear"  );
+        BRwheel           =   hardwareMap.get(DcMotor.class, "RRear"  );
+        lift              =   hardwareMap.get(DcMotor.class, "Lift"   );
+        claw              =   hardwareMap.get(  Servo.class, "Claw"   );
 
         claw.setPosition(0.45F);
+        lift.setDirection(DcMotor.Direction.FORWARD);
+        lift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        lift.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         sleep(500);
 
@@ -54,31 +59,36 @@ public class manualBirdSwitch extends LinearOpMode{
         emu.initialize(parameters);
 
         // this is where you declare all the variables
-        double  fl         =  0;
-        double  fr         =  0;
-        double  bl         =  0;
-        double  br         =  0;
-        int     speed      =  5;
-        double  usedSpeed  =  0.6;
-        boolean aH         =  false;
-        boolean bH         =  false;
-        float   loki       =  0F;
-        float   thor       =  0F;
-        float   direction  =  0F;
-        double  average    =  0D;
-        double  lAverage   =  0D;
-        float   cherryPie  =  (float)Math.PI;
-        double  usedX      =  0D;
-        double  usedY      =  0D;
-        float   looki       =  0F;
-        double  liftS      =  0D;
-        int     lycel      =  0;
-        float   turnSpeed  =  0F;
-        double  clawS      =  0.25F;
-        int     cole      =  0;
-        float   threshold  =  (float)Math.sqrt(2) / 2;
-        boolean lbh        =  true;
-        float   heading;
+        double  fl           =  0;
+        double  fr           =  0;
+        double  bl           =  0;
+        double  br           =  0;
+        int     speed        =  5;
+        double  usedSpeed    =  0.6;
+        boolean aH           =  false;
+        boolean bH           =  false;
+        float   loki         =  0F;
+        float   thor         =  0F;
+        float   direction    =  0F;
+        double  average      =  0D;
+        double  lAverage     =  0D;
+        float   cherryPie    =  (float)Math.PI;
+        double  usedX        =  0D;
+        double  usedY        =  0D;
+        float   looki        =  0F;
+        double  liftS        =  0D;
+        int     lycel        =  0;
+        float   turnSpeed    =  0F;
+        double  clawS        =  0.25F;
+        int     cole         =  0;
+        float   threshold    =  (float)Math.sqrt(2) / 2;
+        boolean lbh          =  true;
+        float   heading      =  0F;
+        boolean rsh          =  false;
+        boolean rso          =  false;
+        int     rsp          =  0;
+        int[]   liftHeights  = new int[]{0,1,2,3};
+
 
         telemetry.addData("Status", "Initialized");
         telemetry.update();
@@ -116,20 +126,6 @@ public class manualBirdSwitch extends LinearOpMode{
 
             usedSpeed = (speed + 1) / 10.;
 
-            // this converts right stick game-pad xy to a direction in radians that we can compare to the gyro direction
-//            if (this.gamepad1.left_stick_button && lbh){
-//
-//                //togCard = !togCard;
-//                lbh     = false;
-//
-//            }
-//
-//            if (!this.gamepad1.left_stick_button){
-//
-//                lbh = true;
-//
-//            }
-
             loki      = (float) Math.atan( (-(this.gamepad1.right_stick_y))/ this.gamepad1.right_stick_x);
 
             if (this.gamepad1.right_stick_x >= 0){
@@ -144,15 +140,15 @@ public class manualBirdSwitch extends LinearOpMode{
 
             looki = loki;
 
-            while (looki > (2F * cherryPie)){
+            while ( looki > (2F * cherryPie)){
 
-                looki -= (2F * cherryPie);
+                    looki -= (2F * cherryPie);
 
             }
 
-            while (looki < 0){
+            while ( looki < 0){
 
-                looki += (2F * cherryPie);
+                    looki += (2F * cherryPie);
 
             }
 
@@ -190,21 +186,17 @@ public class manualBirdSwitch extends LinearOpMode{
             direction = thor - (cherryPie/2) - (heading / 180F * cherryPie);
 
             // this makes sure the direction is always from 0 to 2pi as opposed to negatives or above 2pi because that would be difficult to work with
-            while (direction > (2F * cherryPie)){
+            while (direction  > (2F * cherryPie)){
 
-                direction -= (2F * cherryPie);
+                   direction -= (2F * cherryPie);
 
             }
 
             while (direction < 0){
 
-                direction += (2F * cherryPie);
+                   direction += (2F * cherryPie);
 
             }
-
-
-
-
 
 
 
@@ -212,37 +204,95 @@ public class manualBirdSwitch extends LinearOpMode{
 
 
             //this changes the speed based on how far you moved the stick
-            average  =  Math.sqrt(Math.pow(this.gamepad1.left_stick_x, 2F) + Math.pow(this.gamepad1.left_stick_y, 2F));
+            average   =  Math.sqrt(Math.pow(this.gamepad1.left_stick_x, 2F) + Math.pow(this.gamepad1.left_stick_y, 2F));
 
             // this converts the left stick directions that have been gyro-adjusted to coordinates the wheels can use
-            usedY    =  -Math.cos(direction);
-            usedX    =  -Math.sin(direction);
+            usedY     =  -Math.cos(direction);
+            usedX     =  -Math.sin(direction);
 
             //this calculates turn-speed based on the direction you want to point
             turnSpeed = (cherryPie / 2) + looki - (heading / 180F * cherryPie);
-            
-            while (turnSpeed > cherryPie){
+
+            while (turnSpeed >  cherryPie){
                 turnSpeed -= (2 * cherryPie);
             }
 
-            while (turnSpeed < -cherryPie){
+            while (turnSpeed   < -cherryPie){
                 turnSpeed += (2 * cherryPie);
             }
 
-            //this changes turn-speed based on how far you moved the stick
-            lAverage   =  Math.sqrt( Math.pow( this.gamepad1.right_stick_x, 2F ) + Math.pow( this.gamepad1.right_stick_y, 2F ) );
 
-            // these move the lift
-            if ( ( ( this.gamepad2.left_stick_y < -0.2 ) /* && lycel < 1800*/ ) || ( ( this.gamepad2.left_stick_y > 0.2 ) /* && lycel > 0*/ ) ) {
+            lAverage  =  Math.sqrt( Math.pow( this.gamepad1.right_stick_x, 2F ) + Math.pow( this.gamepad1.right_stick_y, 2F ) );
 
-                liftS  = 10 * this.gamepad2.left_stick_y;
-                lycel +=      this.gamepad2.left_stick_y / Math.abs( this.gamepad2.left_stick_y );
 
-            } else {
+            liftS=0;
 
-                liftS  = 0;
+            if (Math.abs(this.gamepad2.right_stick_y) > 0.2F && !rsh){
+
+                rsh  = true;
+                rso  = true;
+                rsp += Math.abs(this.gamepad2.right_stick_y)/this.gamepad2.right_stick_y;
 
             }
+
+            if (rsp > 3){
+
+                rsp = 3;
+
+            }
+
+            if (rsp < 0){
+
+                rsp = 0;
+
+            }
+
+            if (rso){
+
+                if (lift.getCurrentPosition() > liftHeights[rsp]){
+
+                    liftS = -10D;
+
+                } else {
+
+                    liftS =  10D;
+
+                }
+
+            }
+
+            if (!(Math.abs(this.gamepad2.right_stick_y) > 0.2F)){
+
+                rsh = false;
+
+            }
+
+
+            if ((this.gamepad2.right_bumper)&& (lift.getCurrentPosition() > -3150 || this.gamepad2.a)){
+
+                liftS = -.25;
+                rso = false;
+
+            }
+
+            //this changes turn-speed based on how far you moved the stick
+
+            lift.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            // these move the lift
+            if ( ( ( this.gamepad2.left_stick_y < -0.2 ) && (lift.getCurrentPosition() > -3150 || this.gamepad2.a) ) || ( ( this.gamepad2.left_stick_y > 0.2 ) && (lift.getCurrentPosition() < 0 || this.gamepad2.a)  ) ) {
+
+                rso    = false;
+                liftS  = this.gamepad2.left_stick_y;
+                lycel += this.gamepad2.left_stick_y / Math.abs( this.gamepad2.left_stick_y );
+
+            }
+
+            if (this.gamepad2.b) {
+                
+                lift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            
+            }
+
 
             if (this.gamepad2.left_trigger > 0.1 && clawS > 0.45F){
 
@@ -255,9 +305,9 @@ public class manualBirdSwitch extends LinearOpMode{
                 cole++;
 
             }else {
-                
+
                 clawS  = claw.getPosition();
-                
+
             }
 
             if(Double.isNaN(average)){
@@ -285,13 +335,15 @@ public class manualBirdSwitch extends LinearOpMode{
             FRwheel.setPower(      -fr   );
             BLwheel.setPower(       bl   );
             BRwheel.setPower(      -br   );
-            lift.   setPower(    liftS   );
-            claw.   setPosition( clawS   );
+               lift.setPower(    liftS   );
+               claw.setPosition( clawS   );
 
             // this displays things to the screen
             telemetry.addData(  "Status"        , "Running"    );
             telemetry.addData(  "Speed"         , speed              );
-            telemetry.addData(  "Heading"       , claw.getPosition()            );
+            telemetry.addData(  "Heading"       , heading  );
+            telemetry.addData(  "Claw Position"       , claw.getPosition()  );
+            telemetry.addData("Lift", lift.getCurrentPosition());
             telemetry.update();
 
         }

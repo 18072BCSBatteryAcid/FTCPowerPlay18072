@@ -14,6 +14,7 @@ import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
@@ -65,43 +66,43 @@ public class aprilTagAutoBase extends LinearOpMode{
         public double[] getMotorPowers() {return motorPowers;}
     }
 
-    private Orientation angles;
-    private DcMotor fLWheel;
-    private DcMotor fRWheel;
-    private DcMotor bLWheel;
-    private DcMotor bRWheel;
-    private DcMotor lift;
-    private Servo claw;
+    private Orientation  angles;
+    private DcMotor      fLWheel;
+    private DcMotor      fRWheel;
+    private DcMotor      bLWheel;
+    private DcMotor      bRWheel;
+    private DcMotor      lift;
+    private Servo        claw;
 
-    long mSPTile;
-    long mSPTileLR = 245;
-    long mSPTileFB = 557;
-    double mSPDeg = (440/90);
-    long smallMove = 150;
-    double tileScale = 0.95;
+    long    mSPTile;
+    long    mSPTileLR = 245;
+    long    mSPTileFB = 557;
+    double  mSPDeg    = (440D/90D);
+    long    smallMove = 150;
+    double  tileScale = 0.95;
 
-    long liftSleepTime;
-    boolean groundReset = false;
-    LiftLevel currentLevel = LiftLevel.GROUND;
+    long        liftSleepTime;
+    boolean     groundReset  = false;
+    LiftLevel   currentLevel = LiftLevel.GROUND;
     static long sleepToLow;
 
-    static double turnFrontLeftPowerAdjustment = 1;
+    static double turnFrontLeftPowerAdjustment  = 1;
     static double turnFrontRightPowerAdjustment = 1;
-    static double turnRearLeftPowerAdjustment = 1;
-    static double turnRearRightPowerAdjustment = 0.925;
-    static double fBFrontLeftPowerAdjustment = 1;
-    static double fBFrontRightPowerAdjustment = 1;
-    static double fBRearLeftPowerAdjustment = 1;
-    static double fBRearRightPowerAdjustment = 0.925;
-    static double lRFrontLeftPowerAdjustment = 1;
-    static double lRFrontRightPowerAdjustment = 0.75;
-    static double lRRearLeftPowerAdjustment = 1;
-    static double lRRearRightPowerAdjustment = 0.75;
+    static double turnRearLeftPowerAdjustment   = 1;
+    static double turnRearRightPowerAdjustment  = 0.925;
+    static double fBFrontLeftPowerAdjustment    = 1;
+    static double fBFrontRightPowerAdjustment   = 1;
+    static double fBRearLeftPowerAdjustment     = 1;
+    static double fBRearRightPowerAdjustment    = 0.925;
+    static double lRFrontLeftPowerAdjustment    = 1;
+    static double lRFrontRightPowerAdjustment   = 0.75;
+    static double lRRearLeftPowerAdjustment     = 1;
+    static double lRRearRightPowerAdjustment    = 0.75;
 
-    int zone;
+    int    zone;
     String zoneName;
 
-    final double FEET_PER_METER = 3.28084;
+    final  double FEET_PER_METER = 3.28084;
 
     // Lens intrinsics
     // UNITS ARE PIXELS
@@ -115,9 +116,9 @@ public class aprilTagAutoBase extends LinearOpMode{
     // UNITS ARE METERS
     double tagSize = 0.05;
 
-    final int LEFT_ZONE = 4;
+    final int LEFT_ZONE   = 4;
     final int MIDDLE_ZONE = 8;
-    final int RIGHT_ZONE = 12;
+    final int RIGHT_ZONE  = 12;
 
     AprilTagDetection tagOfInterest = null;
     OpenCvCamera camera;
@@ -157,12 +158,12 @@ public class aprilTagAutoBase extends LinearOpMode{
         switch(direction){
             case BACK:
             case FRONT:
-                mSPTile = mSPTileFB;
-                break;
+                 mSPTile = mSPTileFB;
+                 break;
             case LEFT:
             case RIGHT:
-                mSPTile = mSPTileLR;
-                break;
+                 mSPTile = mSPTileLR;
+                 break;
         }
         double[] motorPowers = getMotorPowersForDirection(direction);
         applyPowerToMotors(motorPowers);
@@ -189,18 +190,18 @@ public class aprilTagAutoBase extends LinearOpMode{
     }
 
     //Takes a parameter from the LiftLevel enum to determine the travel distance of the lift
-    /* KEY - edit if new values are added
-    GROUND - lower the lift all the way
-    ONE - single cone
-    TWO - two stack
-    THREE - three stack
-    FOUR - four stack
-    FIVE - five stack
+    /*   KEY - edit if new values are added
+      GROUND - lower the lift all the way
+         ONE - single cone
+         TWO - two stack
+       THREE - three stack
+        FOUR - four stack
+        FIVE - five stack
     GROUND_J - ground junction
-    LOW_J - low junction
+       LOW_J - low junction
     MEDIUM_J - medium junction
-    HIGH_J - high junction
-    CLEAR - clear cone stack/ low junction height
+      HIGH_J - high junction
+       CLEAR - clear cone stack/ low junction height
     */
     private void moveLift(LiftLevel targetLevel) {
         if (currentLevel == LiftLevel.GROUND || targetLevel == LiftLevel.CLEAR || targetLevel == LiftLevel.GROUND) {
@@ -234,27 +235,33 @@ public class aprilTagAutoBase extends LinearOpMode{
         claw.setPosition(0.73F);
         moveLift(poleHeight);
         sleep(100);
+
         slightMove(Direction.FRONT);
         sleep(100);
+
         claw.setPosition(0.45F);
         sleep(500);
+
         slightMove(Direction.BACK);
         claw.setPosition(0.73F);
         sleep(250);
+
         moveLift(LiftLevel.GROUND);
+
     }
 
     @Override
     public void runOpMode(){
 
-        fLWheel = hardwareMap.get(DcMotor.class,"LFront");
-        fRWheel = hardwareMap.get(DcMotor.class,"RFront");
-        bLWheel = hardwareMap.get(DcMotor.class,"LRear");
-        bRWheel = hardwareMap.get(DcMotor.class,"RRear");
-        lift = hardwareMap.get(DcMotor.class,"Lift");
-        claw = hardwareMap.get(Servo.class,"Claw");
+        fLWheel = hardwareMap.get( DcMotor.class,"LFront" );
+        fRWheel = hardwareMap.get( DcMotor.class,"RFront" );
+        bLWheel = hardwareMap.get( DcMotor.class,"LRear"  );
+        bRWheel = hardwareMap.get( DcMotor.class,"RRear"  );
+        lift    = hardwareMap.get( DcMotor.class,"Lift"   );
+        claw    = hardwareMap.get(   Servo.class,"Claw"   );
 
         claw.setPosition(0.45F);
+        lift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         sleep(500);
 
@@ -327,11 +334,11 @@ public class aprilTagAutoBase extends LinearOpMode{
             zone = tagOfInterest.id;
 
             if(zone == LEFT_ZONE){
-                zoneName = "Left";
+                 zoneName = "Left";
             }else if(zone == MIDDLE_ZONE){
-                zoneName = "Middle";
+                 zoneName = "Middle";
             }else if(zone == RIGHT_ZONE){
-                zoneName = "Right";
+                 zoneName = "Right";
             }
 
             telemetry.addData(">Zone: ", zoneName);
@@ -349,7 +356,7 @@ public class aprilTagAutoBase extends LinearOpMode{
 
             switch (zone){
                 case LEFT_ZONE:
-                    moveTiles(Direction.BACK, 1);
+                    moveTiles(Direction.BACK,  1);
                     break;
                 case RIGHT_ZONE:
                     moveTiles(Direction.FRONT, 1);
@@ -358,8 +365,9 @@ public class aprilTagAutoBase extends LinearOpMode{
 
             sleep(500);
             moveTiles(Direction.LEFT, 2.25);
+
             sleep(1000);
-            rotate(105, Direction.CC_WISE);
+            rotate(70, Direction.CC_WISE);
 
         }
 
